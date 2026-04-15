@@ -1,148 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dr. Nick Chatbot</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --navy: #1a2744; --gold: #c8913a; --gold-light: #e8b86d;
-    --cream: #faf7f2; --white: #ffffff; --gray-mid: #8a8680; --text: #2c2820;
-  }
-  body { font-family: 'Source Sans 3', sans-serif; background: var(--cream); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; }
-  .chat-container { width: 100%; max-width: 480px; background: var(--white); border-radius: 20px; box-shadow: 0 8px 32px rgba(26,39,68,0.15); overflow: hidden; display: flex; flex-direction: column; height: 680px; border: 1px solid rgba(200,145,58,0.2); }
-  .chat-header { background: var(--navy); padding: 20px 24px 18px; display: flex; align-items: center; gap: 14px; position: relative; }
-  .chat-header::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--gold), var(--gold-light), var(--gold)); }
-  .avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--gold-light)); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 22px; color: var(--navy); font-weight: 700; flex-shrink: 0; position: relative; }
-  .status-dot { position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; background: #4caf81; border-radius: 50%; border: 2px solid var(--navy); animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(76,175,129,0.4); } 50% { box-shadow: 0 0 0 5px rgba(76,175,129,0); } }
-  .header-text h2 { font-family: 'Playfair Display', serif; color: var(--white); font-size: 16px; margin-bottom: 2px; }
-  .header-text p { color: var(--gold-light); font-size: 12px; font-weight: 300; }
-  .chat-messages { flex: 1; overflow-y: auto; padding: 20px 18px; display: flex; flex-direction: column; gap: 14px; background: var(--cream); }
-  .chat-messages::-webkit-scrollbar { width: 4px; }
-  .chat-messages::-webkit-scrollbar-thumb { background: rgba(200,145,58,0.3); border-radius: 2px; }
-  .msg { display: flex; flex-direction: column; max-width: 88%; animation: fadeUp 0.3s ease; }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  .msg.bot { align-self: flex-start; } .msg.user { align-self: flex-end; }
-  .msg-bubble { padding: 12px 16px; border-radius: 18px; font-size: 14.5px; line-height: 1.6; }
-  .msg.bot .msg-bubble { background: var(--white); color: var(--text); border-radius: 4px 18px 18px 18px; box-shadow: 0 2px 8px rgba(26,39,68,0.08); border: 1px solid rgba(200,145,58,0.12); }
-  .msg.user .msg-bubble { background: var(--navy); color: var(--white); border-radius: 18px 18px 4px 18px; }
-  .msg-time { font-size: 11px; color: var(--gray-mid); margin-top: 4px; padding: 0 4px; }
-  .msg.user .msg-time { text-align: right; }
-  .quick-replies { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
-  .qr-btn { background: var(--white); border: 1.5px solid var(--gold); color: var(--navy); font-family: 'Source Sans 3', sans-serif; font-size: 13px; font-weight: 500; padding: 7px 13px; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; }
-  .qr-btn:hover { background: var(--gold); color: var(--white); transform: translateY(-1px); }
-  .typing-indicator { display: flex; align-items: center; gap: 5px; padding: 12px 16px; background: var(--white); border-radius: 4px 18px 18px 18px; width: fit-content; box-shadow: 0 2px 8px rgba(26,39,68,0.08); border: 1px solid rgba(200,145,58,0.12); }
-  .typing-dot { width: 7px; height: 7px; background: var(--gold); border-radius: 50%; animation: bounce 1.2s infinite; }
-  .typing-dot:nth-child(2) { animation-delay: 0.2s; } .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes bounce { 0%,60%,100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-6px); opacity: 1; } }
-  .chat-input-area { padding: 14px 16px 16px; background: var(--white); border-top: 1px solid rgba(200,145,58,0.15); display: flex; gap: 10px; align-items: flex-end; }
-  .chat-input { flex: 1; border: 1.5px solid rgba(200,145,58,0.3); border-radius: 24px; padding: 11px 18px; font-family: 'Source Sans 3', sans-serif; font-size: 14.5px; color: var(--text); background: var(--cream); outline: none; resize: none; min-height: 44px; max-height: 110px; transition: border-color 0.2s; line-height: 1.5; }
-  .chat-input:focus { border-color: var(--gold); background: var(--white); }
-  .chat-input::placeholder { color: var(--gray-mid); }
-  .send-btn { width: 44px; height: 44px; background: linear-gradient(135deg, var(--navy), #243560); border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(26,39,68,0.3); }
-  .send-btn:hover { transform: scale(1.06); background: linear-gradient(135deg, var(--gold), var(--gold-light)); }
-  .send-btn svg { width: 18px; height: 18px; fill: white; }
-  .chat-footer { text-align: center; padding: 8px; font-size: 11px; color: var(--gray-mid); background: var(--white); }
-  .chat-footer a { color: var(--gold); text-decoration: none; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dr. Nick Chatbot</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    #chat-container {
+      width: 100%;
+      max-width: 700px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+      display: flex;
+      flex-direction: column;
+      height: 90vh;
+      overflow: hidden;
+    }
+    #chat-header {
+      background: linear-gradient(135deg, #1a3c6e, #2e6abf);
+      color: white;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    #chat-header .info h2 { font-size: 1.1rem; font-weight: 700; }
+    #chat-header .info p { font-size: 0.8rem; opacity: 0.85; margin-top: 2px; }
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .message {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+    .message.bot {
+      background: #eef2f9;
+      color: #1a1a2e;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    .message.user {
+      background: #2e6abf;
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    .typing {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      padding: 12px 16px;
+      background: #eef2f9;
+      border-radius: 14px;
+      border-bottom-left-radius: 4px;
+      align-self: flex-start;
+      width: fit-content;
+    }
+    .typing span {
+      width: 8px; height: 8px;
+      background: #2e6abf;
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-6px); }
+    }
+    #input-area {
+      padding: 16px;
+      border-top: 1px solid #e5e9f0;
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+    #userInput {
+      flex: 1;
+      border: 1.5px solid #d0d7e3;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      resize: none;
+      outline: none;
+      max-height: 110px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    #userInput:focus { border-color: #2e6abf; }
+    #sendBtn {
+      background: #2e6abf;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: background 0.2s;
+      height: 46px;
+    }
+    #sendBtn:hover { background: #1a3c6e; }
+    #sendBtn:disabled { background: #a0b4d0; cursor: not-allowed; }
+  </style>
 </head>
 <body>
-<div class="chat-container">
-  <div class="chat-header">
-    <div class="avatar" style="position:relative;">DR<div class="status-dot"></div></div>
-    <div class="header-text">
-      <h2>Nicholas J. Circolone</h2>
-      <p>Board-Certified Chiropractic Orthopedist</p>
+<div id="chat-container">
+  <div id="chat-header">
+    <div class="info">
+      <h2>Dr. Nick — Apple Rehab Group</h2>
+      <p>Board-Certified Chiropractic Orthopedist · Chattanooga, TN</p>
     </div>
   </div>
-  <div class="chat-messages" id="chatMessages"></div>
-  <div class="chat-input-area">
-    <textarea class="chat-input" id="userInput" placeholder="Type your question here..." rows="1"></textarea>
-    <button class="send-btn" id="sendBtn"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+  <div id="messages">
+    <div class="message bot">
+      Hi! I'm Dr. Nick's virtual assistant. I can answer questions about Apple Rehab Group, chiropractic orthopedics, our services, and Dr. Nick's books and podcast. How can I help you today?
+    </div>
   </div>
-  <div class="chat-footer">Nicholas J. Circolone, DC · Chattanooga, TN · <a href="https://drnick.co" target="_blank">drnick.co</a></div>
+  <div id="input-area">
+    <textarea id="userInput" rows="1" placeholder="Type your question..."></textarea>
+    <button id="sendBtn">➤</button>
+  </div>
 </div>
+
 <script>
-const SERVER_URL = 'RENDER_SERVER_URL_HERE';
-const quickReplies = [
-  ["What makes Dr. Nick different?", "Do I need a referral?", "What conditions do you treat?"],
-  ["How is chiro orthopedics different?", "What should I expect at my first visit?", "Can you help with sports injuries?"],
-];
-let messageCount = 0, qrSet = 0;
-const conversationHistory = [];
-function getTime() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
-function addMessage(text, role, withQR = false) {
-  const container = document.getElementById('chatMessages');
-  const msgDiv = document.createElement('div');
-  msgDiv.className = `msg ${role}`;
-  const bubble = document.createElement('div');
-  bubble.className = 'msg-bubble';
-  bubble.textContent = text;
-  const time = document.createElement('div');
-  time.className = 'msg-time';
-  time.textContent = getTime();
-  msgDiv.appendChild(bubble);
-  msgDiv.appendChild(time);
-  if (withQR && role === 'bot') {
-    const qrDiv = document.createElement('div');
-    qrDiv.className = 'quick-replies';
-    quickReplies[qrSet % quickReplies.length].forEach(label => {
-      const btn = document.createElement('button');
-      btn.className = 'qr-btn';
-      btn.textContent = label;
-      btn.onclick = () => { sendMessage(label); qrDiv.remove(); };
-      qrDiv.appendChild(btn);
-    });
-    msgDiv.appendChild(qrDiv);
-    qrSet++;
+  const SERVER_URL = 'https://dr-nick-chatbot.onrender.com';
+  const messagesEl = document.getElementById('messages');
+  const inputEl = document.getElementById('userInput');
+  const sendBtn = document.getElementById('sendBtn');
+
+  function addMessage(text, sender) {
+    const div = document.createElement('div');
+    div.className = 'message ' + sender;
+    div.textContent = text;
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return div;
   }
-  container.appendChild(msgDiv);
-  container.scrollTop = container.scrollHeight;
-}
-function showTyping() {
-  const container = document.getElementById('chatMessages');
-  const d = document.createElement('div');
-  d.className = 'msg bot'; d.id = 'typingIndicator';
-  d.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
-  container.appendChild(d);
-  container.scrollTop = container.scrollHeight;
-}
-function removeTyping() { const el = document.getElementById('typingIndicator'); if (el) el.remove(); }
-async function sendMessage(text) {
-  const input = document.getElementById('userInput');
-  const userText = text || input.value.trim();
-  if (!userText) return;
-  input.value = ''; input.style.height = 'auto';
-  addMessage(userText, 'user');
-  conversationHistory.push({ role: 'user', content: userText });
-  showTyping();
-  try {
-    const response = await fetch(`${SERVER_URL}/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: conversationHistory })
-    });
-    const data = await response.json();
-    removeTyping();
-    const reply = data.content?.[0]?.text || "I'm sorry, I had trouble responding. Please call our office at (423) 855-7376 or visit drnick.co.";
-    conversationHistory.push({ role: 'assistant', content: reply });
-    messageCount++;
-    addMessage(reply, 'bot', messageCount % 2 === 1);
-  } catch (err) {
-    removeTyping();
-    addMessage("I'm having trouble connecting. Please reach out at drnick.co or call (423) 855-7376!", 'bot');
+
+  function showTyping() {
+    const div = document.createElement('div');
+    div.className = 'typing';
+    div.id = 'typing-indicator';
+    div.innerHTML = '<span></span><span></span><span></span>';
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
   }
-}
-window.addEventListener('load', () => {
-  addMessage("Hi there! I'm the Apple Rehab Group assistant, here on behalf of Dr. Nick. Whether you're dealing with back pain, a sports injury, or just wondering if chiropractic orthopedic care might be right for you — I'm here to help. What's on your mind?", 'bot', true);
-});
-const inputEl = document.getElementById('userInput');
-inputEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
-inputEl.addEventListener('input', () => { inputEl.style.height = 'auto'; inputEl.style.height = Math.min(inputEl.scrollHeight, 110) + 'px'; });
-document.getElementById('sendBtn').addEventListener('click', () => sendMessage());
-</script>
-</body>
-</html>
+
+  function removeTyping() {
+    const t = document.getElementById('typing-indicator');
+    if (t) t.remove();
+  }
+
+  async function sendMessage() {
+    const text = inputEl.value.trim();
+    if (!text) return;
+    inputEl
