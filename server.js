@@ -39,10 +39,10 @@ You help patients and visitors by:
 Always refer to him as Dr. Circolone, never Dr. Nick. Always be warm, professional, and helpful. If you don't know a specific answer, suggest they call the office or visit drnick.co.`;
 
 app.post('/chat', async (req, res) => {
-  const { messages } = req.body;
+  const { message } = req.body;
 
-  if (!messages || !Array.isArray(messages)) {
-    return res.status(400).json({ error: 'Messages array is required' });
+  if (!message) {
+    return res.status(400).json({ error: 'Message is required' });
   }
 
   try {
@@ -50,10 +50,10 @@ app.post('/chat', async (req, res) => {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1024,
       system: SYSTEM_PROMPT,
-      messages: messages
+      messages: [{ role: 'user', content: message }]
     });
 
-    res.json({ response: response.content[0].text });
+    res.json({ reply: response.content[0].text });
   } catch (error) {
     console.error('Anthropic API error:', error);
     res.status(500).json({ error: 'Failed to get response from AI' });
